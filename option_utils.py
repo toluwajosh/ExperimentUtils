@@ -22,6 +22,26 @@ logger = logging.getLogger(f"base.{__name__}")
 
 @dataclass
 class TrainerConfig:
+    """Create a dataclass for options.
+
+    Default Members:
+        experiment_name: str
+        epochs: int
+        learning_rate: float
+        device: str
+        restart: bool
+        lr_patience: int
+        weight_decay: float
+        scheduler_factor: float
+    
+    Member Functions
+        from_yaml
+        to_yaml
+        _to_dict
+    
+    It can be used with the TrainOptions class to convert command line arguments to dataclass
+    """
+
     epochs: int
     restart: bool
     device: str
@@ -54,9 +74,9 @@ class TrainerConfig:
         """
 
         with Path(path).open("w") as f:
-            yaml.safe_dump(self.to_dict(), f, indent=4)
+            yaml.safe_dump(self._to_dict(), f, indent=4)
 
-    def to_dict(self) -> Dict:
+    def _to_dict(self) -> Dict:
         """Return a `dict` of the parameters with classes transformed into string."""
 
         # Need a copy not to overwrite itself
@@ -144,31 +164,13 @@ class TrainOptions(object):
             "--restart", action="store_true", help="Flag for restarting training."
         )
 
-        self.confg = TrainerConfig
+        self.config = TrainerConfig
 
     def add_argument(self, *args, **kwargs):
-        assert args[0][:2] == "--", "Use full name as first argument to parser"
         self.parser.add_argument(*args, **kwargs)
-        globals().update({args[0][2:]: None})
 
-        # replace config class with child config object
-        class NewConfig(self.confg):
-            globals()[args[0][2:]]: kwargs["type"]  # type: ignore
-
-        self.config = NewConfig
-
-    def parse(self, pop_list: list = []) -> dict:
-        args_dict = vars(self.parser.parse_args())
-
-        popped = []
-        for arg in pop_list:
-            if arg == "log_level":
-                arg_option = getattr(logging, args_dict.pop("log_level").upper())
-            else:
-                arg_option = args_dict.pop(arg)
-            popped.append(arg_option)
-        logger.info("Train Options Parsed!")
-        return args_dict, popped
+    def parse(self) -> dict:
+        return vars(self.parser.parse_args())
 
 
 if __name__ == "__main__":
