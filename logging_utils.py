@@ -5,11 +5,12 @@ Date: 2020-09-7
 """
 
 import logging
-import torch
 from pathlib import Path
-from typing import Callable, Dict, List, Union
-from torchvision.utils import make_grid
+from typing import Dict, List, Union
+
+import torch
 from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 logger = logging.getLogger(f"base.{__name__}")
 
