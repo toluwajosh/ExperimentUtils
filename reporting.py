@@ -7,12 +7,13 @@ from typing import Dict
 
 
 class ResultData(object):
-    __categories = []
-    __summaries = {}
-
     def __init__(self, method_name: str, save_path: str = "./results") -> None:
         self.__method_name = method_name
         self.__save_path = save_path
+
+        # Default containers
+        self.__categories = []
+        self.__summaries = {}
 
     def add_category(self, category: Dict) -> None:
         """Add a result category
@@ -61,10 +62,10 @@ class ResultData(object):
 
 if __name__ == "__main__":
     # example:
-    result_data = ResultData("LogReg")
-    result_data.add_category({"name": "category 1", "score": 0.00})
-    result_data.add_category({"name": "category 2", "score": 0.01})
-    result_data.add_category({"name": "category 3", "score": 0.02})
+    result_data = ResultData("example_result_2", "examples/results")
+    result_data.add_category({"category": "category 1", "score": 0.01})
+    result_data.add_category({"category": "category 2", "score": 0.03})
+    result_data.add_category({"category": "category 3", "score": 0.06})
     result_data.add_summary({"average": 90})
     result_data.to_json()
     print(result_data)

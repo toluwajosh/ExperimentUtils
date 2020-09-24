@@ -103,7 +103,7 @@ def update_summaries_div(value):
                     {
                         "x": list(data["summary"].keys()),
                         "y": list(data["summary"].values()),
-                        "type": "scatter",
+                        "type": "bar",
                         "name": data["method"],
                     }
                     for data in all_data
