@@ -15,24 +15,29 @@ from torchvision.utils import make_grid
 logger = logging.getLogger(f"base.{__name__}")
 
 
-def setup_logging(logger: logging.Logger, log_level: str) -> None:
+def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") -> None:
     """Setup logging for console output
 
     Args:
         logger (logging.Logger): the logger object
         log_level (str): the minimum level of logging
+        log_file (optional, str): file to write logging output. Defaults to ""
     """
 
     # Setup console handler
     logger.setLevel(log_level)
     ch = logging.StreamHandler()
     ch.setLevel(log_level)
-    ch.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s [%(name)s] %(message)s", datefmt="%H:%M:%S",
-        )
+    logging_format = logging.Formatter(
+        "%(asctime)s %(levelname)s [%(name)s] %(message)s", datefmt="%H:%M:%S",
     )
+    ch.setFormatter(logging_format)
     logger.addHandler(ch)
+    if log_file:
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(log_level)
+        fh.setFormatter(logging_format)
+        logger.addHandler(fh)
 
     # Add colors
     _levels = [[226, "DEBUG"], [148, "INFO"], [208, "WARNING"], [197, "ERROR"]]
