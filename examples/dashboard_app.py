@@ -12,6 +12,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 from dash.dependencies import Input, Output
+from pprint import pprint
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -24,13 +25,39 @@ def get_data() -> List:
     Returns:
         [List]: A list of results object
     """
-    results_dir = Path("./results")
+    results_dir = Path("./examples/results")
     all_results = [x for x in results_dir.iterdir() if x.suffix == ".json"]
     all_data = []
     for data_path in all_results:
         with open(str(data_path)) as json_file:
             all_data.append(json.load(json_file))
+            # all_data += json.load(json_file)
     return all_data
+
+
+def combine_metrics(all_data):
+    all_metrics = {}
+    for sub_data in all_data:
+        for metric in sub_data["metrics"]:
+            if metric["metric"] not in all_metrics:
+                # create new data
+                all_metrics[metric["metric"]] = [
+                    {
+                        "method": sub_data["method"],
+                        "results": metric["results"],
+                        "summary": metric["summary"],
+                    }
+                ]
+            else:
+                # update old
+                all_metrics[metric["metric"]].append(
+                    {
+                        "method": sub_data["method"],
+                        "results": metric["results"],
+                        "summary": metric["summary"],
+                    }
+                )
+    return all_metrics
 
 
 app.layout = html.Div(
@@ -59,13 +86,13 @@ app.layout = html.Div(
     Output("results-div", "children"), [Input("interval-component", "n_intervals")]
 )
 def update_results_div(value):
-    all_data = get_data()
-    return (
+    all_data = combine_metrics(get_data())
+    return [
         dcc.Graph(
             id="results-graph",
             figure={
                 "layout": {
-                    "title": "AUCs by class for MVTec Dataset",
+                    "title": metric,  # data["metric"] # this should be metric name
                     "plot_bgcolor": colors["background"],
                     "paper_bgcolor": colors["background"],
                     "font": {"color": colors["text"]},
@@ -75,26 +102,27 @@ def update_results_div(value):
                         "x": [x["category"] for x in data["results"]],
                         "y": [y["score"] for y in data["results"]],
                         "type": "bar",
-                        "name": data["method"],
+                        "name": data["method"],  # sub_data["method"], data["metric"]
                     }
-                    for data in all_data
+                    for data in sub_data
                 ],
             },
-        ),
-    )
+        )
+        for (metric, sub_data) in all_data.items()
+    ]
 
 
 @app.callback(
     Output("summaries-div", "children"), [Input("interval-component", "n_intervals")]
 )
 def update_summaries_div(value):
-    all_data = get_data()
-    return (
+    all_data = combine_metrics(get_data())
+    return [
         dcc.Graph(
             id="summaries-graph",
             figure={
                 "layout": {
-                    "title": "Experiments Summary",
+                    "title": "Summary: " + metric,
                     "plot_bgcolor": colors["background"],
                     "paper_bgcolor": colors["background"],
                     "font": {"color": colors["text"]},
@@ -106,11 +134,12 @@ def update_summaries_div(value):
                         "type": "bar",
                         "name": data["method"],
                     }
-                    for data in all_data
+                    for data in sub_data
                 ],
             },
-        ),
-    )
+        )
+        for (metric, sub_data) in all_data.items()
+    ]
 
 
 if __name__ == "__main__":
