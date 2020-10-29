@@ -6,7 +6,8 @@ import pickle
 from copy import deepcopy
 from pathlib import Path
 from typing import List
-
+from matplotlib import pyplot as plt
+import numpy as np
 from sklearn.utils import shuffle
 
 logger = logging.getLogger(f"base.{__name__}")
@@ -53,3 +54,24 @@ def shuffle_on_pattern(data_list: List, name: str = "shuffle_pattern") -> List:
             r_pattern = pickle.load(f)
         logger.debug("Loaded previous dataset shuffle pattern!")
     return rearrange(data_list, r_pattern)
+
+
+def plot_image(
+    image: np.ndarray, size: Optional[int] = 15, title: Optional[str] = ""
+) -> None:
+    """Plot a single image using matplotlib, Without overwriting a privious.
+
+    Args:
+        image (np.ndarray): image to plot
+        size (Optional[int]): size of the plot image
+        title (Optional[str]): optional title given to the plot
+    """
+    f = plt.figure(figsize=(size, size))
+    image_plot = f.add_subplot()
+    if title:
+        image_plot.set_title(title)
+    plt.imshow(image)
+
+
+if __name__ == "__main__":
+    pass
