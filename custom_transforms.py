@@ -6,7 +6,7 @@ import torch
 import random
 import numpy as np
 
-from typing import Dict
+from typing import Dict, Union
 
 from PIL import Image, ImageOps, ImageFilter
 
@@ -33,8 +33,49 @@ class DummyTransformation(object):
         return NotImplementedError
 
 
+class ToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, sample: Dict) -> Union[Dict, NotImplementedError]:
+        """Convert ndarrays in sample to Tensors
+            swap color axis for ndim = 3
+            numpy image: H x W x C
+            torch image: C X H X W
+
+        Args:
+            sample (Dict): Dictionary of ndarray samples
+
+        Returns:
+            Union[Dict, NotImplementedError]: returns a dictionary of converted tensors. 
+                A NotImplementedError is raise if dimension of ndarry is not 2 or 3
+        """
+
+        image = sample["image"]
+        image = np.array(image).astype(np.float32).transpose((2, 0, 1))
+        image = torch.from_numpy(image).float()
+
+        return_dict = {"image": image}
+        targets = sample["targets"]
+        new_targets = {}
+        for item in targets.items():
+            data = item[1]
+            if data.ndim == 2:
+                data = np.array(data).astype(np.float32)
+            elif data.ndim == 3:
+                data = np.array(data).astype(np.float32).transpose((2, 0, 1))
+            else:
+                return NotImplementedError
+            data = torch.from_numpy(data).float()
+            new_targets[item[0]] = data
+            # new_targets.update({item[0]: data})
+        return_dict.update(new_targets)
+
+        return return_dict
+
+
 class Normalize(object):
     """Normalize a tensor image with mean and standard deviation.
+        The input image is only normalized. Target are unchanged.
     Args:
         mean (tuple): means for each channel.
         std (tuple): standard deviations for each channel.
@@ -45,55 +86,42 @@ class Normalize(object):
         self.std = std
 
     def __call__(self, sample):
-        img = sample["image"]
-        img = np.array(img).astype(np.float32)
-        img /= 255.0
-        img -= self.mean
-        img /= self.std
-
-        return_dict = {"image": img, "name": sample["name"]}
-        if "label" in sample:
-            return_dict.update({"label": sample["label"]})
-        if "lanes" in sample:
-            return_dict.update({"lanes": sample["lanes"]})
-
+        image = sample["image"]
+        image = np.array(image).astype(np.float32)
+        image /= 255.0
+        image -= self.mean
+        image /= self.std
+        targets = sample["targets"]
+        return_dict = {"image": image}
+        targets = {key: value for key, value in targets}
+        return_dict.update(targets)
         return return_dict
 
 
-class ToTensor(object):
-    """Convert ndarrays in sample to Tensors."""
+class RandomCropSquare(object):
+    """
+    Random croping to square size
+    It takes great advantage in securing width-wise wide crop
+    """
+
+    def __init__(self, crop_size):
+        self.width = crop_size
+        self.height = crop_size
 
     def __call__(self, sample):
-        # swap color axis because
-        # numpy image: H x W x C
-        # torch image: C X H X W
-        img = sample["image"]
-        img = np.array(img).astype(np.float32).transpose((2, 0, 1))
-
-        img = torch.from_numpy(img).float()
-
-        return_dict = {"image": img, "name": sample["name"]}
-
-        if "label" in sample:
-            mask = sample["label"]
-            mask = np.asarray(mask).astype(np.float32)
-            mask = torch.from_numpy(mask).float()
-            return_dict.update({"label": mask})
-
-        if "lanes" in sample:
-            lanes = sample["lanes"]
-            # lanes = np.array(lanes).astype(np.float32).transpose((2, 0, 1))
-            lanes = np.asarray(lanes).astype(np.float32)
-            lanes = torch.from_numpy(lanes).float()
-            return_dict.update({"lanes": lanes})
-
+        image = sample["image"]
+        w, h = image.size
+        x = random.randint(0, w - self.width)
+        y = random.randint(0, h - self.height)
+        image = image.crop((x, y, x + self.width, y + self.height))
+        return_dict = {"image": image}
+        targets = sample["targets"]
+        targets = {
+            key: tensor.crop((x, y, x + self.width, y + self.height))
+            for key, tensor in targets
+        }
+        return_dict.update(targets)
         return return_dict
-        # if "label" in sample:
-        #     mask = sample["label"]
-        #     mask = np.asarray(mask).astype(np.float32)
-        #     mask = torch.from_numpy(mask).float()
-        #     return {"image": img, "label": mask, "name": sample["name"]}
-        # return {"image": img, "name": sample["name"]}
 
 
 class RandomHorizontalFlip(object):
@@ -244,7 +272,7 @@ class RandomCrop2(object):
 """
 
 
-class RandomCrop(object):
+class RandomCropOld(object):
     def __init__(self, crop_size):
         self.crop_size = crop_size
 
@@ -304,3 +332,16 @@ class FixedResize(object):
             mask = mask.resize(self.size, Image.NEAREST)
             return {"image": img, "label": mask, "name": sample["name"]}
         return {"image": img, "name": sample["name"]}
+
+
+if __name__ == "__main__":
+    image = np.zeros([128, 128, 3])
+    target = np.zeros_like(image)
+    target_2 = np.zeros([128, 128])
+    to_tensor = ToTensor()
+    output_data = to_tensor(
+        {"image": image, "targets": {"target_1": target, "target_2": target_2}}
+    )
+    for item in output_data.items():
+        print(item[0], ":", item[1].shape)
+
