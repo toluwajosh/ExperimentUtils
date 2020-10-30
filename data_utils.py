@@ -1,11 +1,14 @@
 """
 Data utils
 """
+import torch
+import cv2
+import math
 import logging
 import pickle
 from copy import deepcopy
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 from matplotlib import pyplot as plt
 import numpy as np
 from sklearn.utils import shuffle
@@ -56,7 +59,7 @@ def shuffle_on_pattern(data_list: List, name: str = "shuffle_pattern") -> List:
     return rearrange(data_list, r_pattern)
 
 
-def plot_image(
+def plot_image_single(
     image: np.ndarray, size: Optional[int] = 15, title: Optional[str] = ""
 ) -> None:
     """Plot a single image using matplotlib, Without overwriting a privious.
@@ -73,5 +76,67 @@ def plot_image(
     plt.imshow(image)
 
 
+def plot_images_mosaic(
+    images: Union[np.ndarray, torch.Tensor],
+    fname: Optional[str] = "images.jpg",
+    max_size: Optional[int] = 640,
+    max_subplots: Optional[int] = 16,
+):
+    """Plot a batch of images as a mosaic stitched together.
+
+    Args:
+        images (Union[np.ndarray, torch.Tensor]): Batch of images
+        fname (Optional[str], optional): Optional save name for mosaic. Defaults to "images.jpg".
+        max_size (Optional[int], optional): Maximum single image size. Defaults to 640.
+        max_subplots (Optional[int], optional): Maximum number of subplots. Defaults to 16.
+
+    Returns:
+        [np.ndarray]: mosaic image
+    """
+    tl = 3  # line thickness
+    tf = max(tl - 1, 1)  # font thickness
+
+    if isinstance(images, torch.Tensor):
+        images = images.cpu().float().numpy()
+
+    # un-normalise
+    if np.max(images[0]) <= 1:
+        images *= 255
+
+    bs, _, h, w = images.shape  # batch size, _, height, width
+
+    bs = min(bs, max_subplots)  # limit plot images
+    ns = np.ceil(bs ** 0.5)  # number of subplots (square)
+
+    # Check if we should resize
+    scale_factor = max_size / max(h, w)
+    if scale_factor < 1:
+        h = math.ceil(scale_factor * h)
+        w = math.ceil(scale_factor * w)
+
+    # Empty array for output
+    mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
+
+    for i, img in enumerate(images):
+        if i == max_subplots:  # if last batch has fewer images than we expect
+            break
+
+        block_x = int(w * (i // ns))
+        block_y = int(h * (i % ns))
+
+        img = img.transpose(1, 2, 0)
+        if scale_factor < 1:
+            img = cv2.resize(img, (w, h))
+
+        mosaic[block_y : block_y + h, block_x : block_x + w, :] = img
+    if fname is not None:
+        mosaic = cv2.resize(
+            mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA
+        )
+        cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
+    return mosaic
+
+
 if __name__ == "__main__":
-    pass
+    images = np.full([3, 3, 128, 256], 0, np.uint8)
+    mosaic = plot_images_mosaic(images)
