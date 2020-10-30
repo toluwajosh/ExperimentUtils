@@ -2,13 +2,13 @@
 Custom transformations for images used in a Fully convolutional model
 """
 
-import torch
 import random
+from typing import Dict
+
 import numpy as np
-
-from typing import Dict, Union
-
-from PIL import Image, ImageOps, ImageFilter
+import torch
+from PIL import Image, ImageFilter, ImageOps
+from torchvision import transforms
 
 
 class DummyTransformation(object):
@@ -17,9 +17,9 @@ class DummyTransformation(object):
     def __init__(*args, **kwargs):
         pass
 
-    def __call__(self, sample: Dict, include_targets: bool) -> Dict:
-        image = ["image"]
-        targets = ["targets"]
+    def __call__(self, sample: Dict, include_targets: bool) -> NotImplementedError:
+        image = sample["image"]
+        targets = sample["targets"]
 
         # Apply transformation on image
         pass
@@ -36,7 +36,8 @@ class DummyTransformation(object):
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
-    def __call__(self, sample: Dict) -> Union[Dict, NotImplementedError]:
+    @staticmethod
+    def __call__(sample: Dict) -> Dict:
         """Convert ndarrays in sample to Tensors
             swap color axis for ndim = 3
             numpy image: H x W x C
@@ -54,23 +55,15 @@ class ToTensor(object):
         image = np.array(image).astype(np.float32).transpose((2, 0, 1))
         image = torch.from_numpy(image).float()
 
-        return_dict = {"image": image}
         targets = sample["targets"]
         new_targets = {}
-        for item in targets.items():
-            data = item[1]
-            if data.ndim == 2:
-                data = np.array(data).astype(np.float32)
-            elif data.ndim == 3:
-                data = np.array(data).astype(np.float32).transpose((2, 0, 1))
-            else:
-                return NotImplementedError
+        for key, data in targets.items():
+            data = np.array(data).astype(np.float32)
+            if data.ndim == 3:
+                data = data.transpose((2, 0, 1))
             data = torch.from_numpy(data).float()
-            new_targets[item[0]] = data
-            # new_targets.update({item[0]: data})
-        return_dict.update(new_targets)
-
-        return return_dict
+            new_targets[key] = data
+        return {"image": image, "targets": new_targets}
 
 
 class Normalize(object):
@@ -92,16 +85,18 @@ class Normalize(object):
         image -= self.mean
         image /= self.std
         targets = sample["targets"]
-        return_dict = {"image": image}
-        targets = {key: value for key, value in targets}
-        return_dict.update(targets)
-        return return_dict
+        # return_dict = {"image": image}
+        targets = {key: value for key, value in targets.items()}
+        # return_dict.update(targets)
+        # return return_dict
+        return {"image": image, "targets": targets}
 
 
 class RandomCropSquare(object):
     """
     Random croping to square size
     It takes great advantage in securing width-wise wide crop
+    Expects a PIL Image
     """
 
     def __init__(self, crop_size):
@@ -114,14 +109,14 @@ class RandomCropSquare(object):
         x = random.randint(0, w - self.width)
         y = random.randint(0, h - self.height)
         image = image.crop((x, y, x + self.width, y + self.height))
-        return_dict = {"image": image}
+        # return_dict = {"image": image}
         targets = sample["targets"]
         targets = {
             key: tensor.crop((x, y, x + self.width, y + self.height))
-            for key, tensor in targets
+            for key, tensor in targets.items()
         }
-        return_dict.update(targets)
-        return return_dict
+        # return_dict.update(targets)
+        return {"image": image, "targets": targets}
 
 
 class RandomHorizontalFlip(object):
@@ -241,54 +236,6 @@ class FixScaleCrop(object):
         return {"image": img, "name": sample["name"]}
 
 
-class RandomCrop2(object):
-    """
-    Keeping BDD100k aspect ratio in training crops
-    It takes great advantage in securing width-wise wide crop
-    """
-
-    def __init__(self, crop_size):
-        self.width = crop_size
-        self.height = int(crop_size / 1.7777777777777777)
-
-    def __call__(self, sample):
-        img = sample["image"]
-        w, h = img.size
-        x = random.randint(0, w - self.width)
-        y = random.randint(0, h - self.height)
-        img = img.crop((x, y, x + self.width, y + self.height))
-        if "label" in sample:
-            label = sample["label"]
-            label = label.crop((x, y, x + self.width, y + self.height))
-            return {"image": img, "label": label, "name": sample["name"]}
-        return {"image": img, "name": sample["name"]}
-
-
-"""
-	Author: Sungguk Cha
-	RandomCrop transform assumes 720p as input and 720 cropsize
-	it randomly choose x value from [0, 1280-720) and return the cropped image
-	it may reduce much much more time than FixScaleCrop above for the given assumption
-"""
-
-
-class RandomCropOld(object):
-    def __init__(self, crop_size):
-        self.crop_size = crop_size
-
-    def __call__(self, sample):
-        img = sample["image"]
-        w, h = img.size
-        x = max(0, random.randint(0, w - self.crop_size))
-        y = max(0, random.randint(0, h - self.crop_size))
-        img = img.crop((x, y, x + self.crop_size, y + self.crop_size))
-        if "label" in sample:
-            label = sample["label"]
-            label = label.crop((x, 0, x + self.crop_size, 720))
-            return {"image": img, "label": label, "name": sample["name"]}
-        return {"image": img, "name": sample["name"]}
-
-
 class Rescale(object):
     def __init__(self, ratio):
         self.ratio = ratio
@@ -334,14 +281,25 @@ class FixedResize(object):
         return {"image": img, "name": sample["name"]}
 
 
-if __name__ == "__main__":
-    image = np.zeros([128, 128, 3])
-    target = np.zeros_like(image)
-    target_2 = np.zeros([128, 128])
-    to_tensor = ToTensor()
-    output_data = to_tensor(
+def transform_compose_test(sample):
+    composed_transforms = transforms.Compose(
+        [RandomCropSquare(50), Normalize(), ToTensor(),]
+    )
+    return composed_transforms(sample)
+
+
+def test_transforms():
+    image = np.ones([128, 128, 3]).astype(np.uint8)
+    image = Image.fromarray(image)
+    target = np.ones_like(image).astype(np.uint8)
+    target = Image.fromarray(target)
+    target_2 = np.ones([128, 128]).astype(np.uint8)
+    target_2 = Image.fromarray(target_2)
+    output_data = transform_compose_test(
         {"image": image, "targets": {"target_1": target, "target_2": target_2}}
     )
-    for item in output_data.items():
-        print(item[0], ":", item[1].shape)
+    print(output_data)
 
+
+if __name__ == "__main__":
+    test_transforms()
