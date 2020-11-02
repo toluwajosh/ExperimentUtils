@@ -1,17 +1,20 @@
 """
 Data utils
 """
-import torch
-import cv2
-import math
 import logging
+import math
 import pickle
 from copy import deepcopy
 from pathlib import Path
 from typing import List, Optional, Union
-from matplotlib import pyplot as plt
+
+import cv2
 import numpy as np
+import torch
+from matplotlib import pyplot as plt
 from sklearn.utils import shuffle
+from torch.utils import data
+from torch.utils.data import DataLoader
 
 logger = logging.getLogger(f"base.{__name__}")
 
@@ -135,6 +138,31 @@ def plot_images_mosaic(
         )
         cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
     return mosaic
+
+
+def prepare_dataset(
+    dataloader: data.Dataset,
+    batch_size: int = 32,
+    shuffle: bool = False,
+    num_workers: int = 4,
+) -> DataLoader:
+    """Prepare dataset for training
+
+    Args:
+        dataloader (data.Dataset)
+        batch_size (int)
+        shuffle (bool)
+        num_workers (int)
+
+    Returns:
+        DataLoader
+    """
+    params = {
+        "batch_size": batch_size,
+        "shuffle": shuffle,
+        "num_workers": num_workers,
+    }
+    return DataLoader(dataloader, **params)
 
 
 if __name__ == "__main__":
