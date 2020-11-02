@@ -1,7 +1,7 @@
 import torch
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 logger = logging.getLogger(f"base.{__name__}")
 
@@ -29,6 +29,25 @@ def load_checkpoint(
         checkpoint = {"epoch": 1, "best": float("inf")}
 
     return checkpoint
+
+
+def save_checkpoint(state: Dict, filename: Union[str, Path], is_best: bool) -> None:
+    """Save checkpoint if a new best is achieved
+
+    Args:
+        state (dict): torch model dictionary
+        filename (Union[str, Path]): filename to save
+        is_best (bool): flag for best model yet
+    """
+    if is_best:
+        logger.info("=> Saving new checkpoint")
+        torch.save(state, filename)
+
+        # save a separate file for the best model
+        torch.save(state, str(filename) + ".best")
+    else:
+        torch.save(state, filename)
+        logger.info("=> Validation Accuracy did not improve")
 
 
 if __name__ == "__main__":
