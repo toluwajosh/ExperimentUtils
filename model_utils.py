@@ -29,3 +29,7 @@ def load_checkpoint(
         checkpoint = {"epoch": 1, "best": float("inf")}
 
     return checkpoint
+
+
+if __name__ == "__main__":
+    pass
