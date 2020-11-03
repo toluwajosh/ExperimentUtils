@@ -6,7 +6,7 @@ Date: 2020-09-7
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import List
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -34,6 +34,7 @@ def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") ->
     ch.setFormatter(logging_format)
     logger.addHandler(ch)
     if log_file:
+        Path(log_file).parent.mkdir(exist_ok=True, parents=True)
         fh = logging.FileHandler(log_file)
         fh.setLevel(log_level)
         fh.setFormatter(logging_format)
