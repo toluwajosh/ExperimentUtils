@@ -241,18 +241,40 @@ def get_patch_boundaries(
     boundaries = grid_pairs([0, limitx, 0, limity], patch_size, dtype="int")
 
     # TODO: Treat uncovered area.
-    # In an implementation using on the patch size, 
+    # In an implementation using the patch size,
     # the whole image is possibly not covered,
     # we can add extra code to cover left out areas, which may result in overlap
     return boundaries
 
 
+def get_patches_batch(
+    image: torch.tensor, grids_dim: List[int] = [5, 5]
+) -> torch.tensor:
+    """Split a large tensor into patches and return as a batch tensor data
+
+    Args:
+        image (torch.tensor): large image tensor
+        grids_dim (List[int], optional): grids dimension. Defaults to [5, 5].
+
+    Returns:
+        torch.tensor: output patch tensor batch
+    """
+    _, _, w, h = image.shape
+    patch_bounds = get_patch_boundaries([w, h], grids_dim=grids_dim)
+    patches_list = []
+    for patch in patch_bounds:
+        x1, y1, x2, y2 = patch
+        patch_tensor = image[:, :, x1:x2, y1:y2]
+        patches_list.append(patch_tensor)
+    return torch.cat(patches_list)
+
+
 if __name__ == "__main__":
     # images = np.full([3, 3, 128, 256], 0, np.uint8)
     # mosaic = plot_images_mosaic(images)
-    result = get_patch_boundaries([4, 4], [1, 1])
-    print(result)
-    result = get_patch_boundaries([4, 4], grids_dim=[4, 4])
-    print(result)
+    image_shape = [1, 3, 2880, 2160]
+    image = torch.ones(image_shape)
+    patches_tensor = get_patches_batch(image)
+    print(patches_tensor.shape)
 
     pass
