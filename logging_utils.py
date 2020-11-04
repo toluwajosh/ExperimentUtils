@@ -6,7 +6,7 @@ Date: 2020-09-7
 
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -61,6 +61,7 @@ def setup_dirs(root_dir: Path, subdirectories: List[str]) -> None:
         new_dir.mkdir(parents=True, exist_ok=True)
 
 
+# TODO: remove in update
 def tensorboard_image(
     writer: SummaryWriter,
     image: torch.tensor,
@@ -89,6 +90,21 @@ def tensorboard_image(
     # target image
     grid_image = make_grid(target[:2].clone().cpu().data, 3, normalize=True)
     writer.add_image("Target", grid_image, global_step)
+
+
+# TODO: allow arbitrary number of images by taking input as a dict({name:image})
+def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -> None:
+    """Output image tensors in tensorboard visualization. 
+    Useful for image based training
+
+    Args:
+        writer (SummaryWriter): tensorboard writer object
+        images (Dict): dictionary of {name: image_tensor} pair
+        global_step (int): global step number
+    """
+    for name, image in images.items():
+        grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
+        writer.add_image(name, grid_image, global_step)
 
 
 if __name__ == "__main__":
