@@ -241,7 +241,7 @@ def get_patch_boundaries(
     boundaries = grid_pairs([0, limitx, 0, limity], patch_size, dtype="int")
 
     # TODO: Treat uncovered area.
-    # In an implementation using on the patch size, 
+    # In an implementation using on the patch size,
     # the whole image is possibly not covered,
     # we can add extra code to cover left out areas, which may result in overlap
     return boundaries

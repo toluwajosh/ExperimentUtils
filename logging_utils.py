@@ -82,13 +82,13 @@ def tensorboard_image(
     grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
     writer.add_image("Input image", grid_image, global_step)
 
-    # target image
-    grid_image = make_grid(target[:2].clone().cpu().data, 3, normalize=True)
-    writer.add_image("Target", grid_image, global_step)
-
     # Model output
     grid_image = make_grid(output[:2].clone().cpu().data, 3, normalize=True)
     writer.add_image("Prediction", grid_image, global_step)
+
+    # target image
+    grid_image = make_grid(target[:2].clone().cpu().data, 3, normalize=True)
+    writer.add_image("Target", grid_image, global_step)
 
 
 if __name__ == "__main__":
