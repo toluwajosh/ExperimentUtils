@@ -92,7 +92,7 @@ class Normalize(object):
         return {"image": image, "targets": targets}
 
 
-class RandomCropSquare(object):
+class RandomCropRect(object):
     """
     Random croping to square size
     It takes great advantage in securing width-wise wide crop
@@ -100,8 +100,8 @@ class RandomCropSquare(object):
     """
 
     def __init__(self, crop_size):
-        self.width = crop_size
-        self.height = crop_size
+        self.width = crop_size[0]
+        self.height = crop_size[1]
 
     def __call__(self, sample):
         image = sample["image"]
@@ -283,7 +283,7 @@ class FixedResize(object):
 
 def transform_compose_test(sample):
     composed_transforms = transforms.Compose(
-        [RandomCropSquare(50), Normalize(), ToTensor(),]
+        [RandomCropRect(50), Normalize(), ToTensor(),]
     )
     return composed_transforms(sample)
 

@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import List, Optional, Union
 
-# import cv2s
+import cv2
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
@@ -88,7 +88,7 @@ def plot_images_mosaic(
     """Plot a batch of images as a mosaic stitched together.
 
     Args:
-        images (Union[np.ndarray, torch.Tensor]): Batch of images
+        images (Union[np.ndarray, torch.Tensor]): Batch of images [batch, channels, width, height]
         fname (Optional[str], optional): Optional save name for mosaic. Defaults to "images.jpg".
         max_size (Optional[int], optional): Maximum single image size. Defaults to 640.
         max_subplots (Optional[int], optional): Maximum number of subplots. Defaults to 16.

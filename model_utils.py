@@ -31,7 +31,7 @@ def load_checkpoint(
     return checkpoint
 
 
-def save_checkpoint(state: Dict, filename: Union[str, Path], is_best: bool) -> None:
+def save_checkpoint(state: Dict, experiment_name: str, is_best: bool) -> None:
     """Save checkpoint if a new best is achieved
 
     Args:
@@ -39,6 +39,7 @@ def save_checkpoint(state: Dict, filename: Union[str, Path], is_best: bool) -> N
         filename (Union[str, Path]): filename to save
         is_best (bool): flag for best model yet
     """
+    filename = Path(f"./results/{experiment_name}/checkpoints/train.ckpt")
     if is_best:
         logger.info("=> Saving new checkpoint")
         torch.save(state, filename)
