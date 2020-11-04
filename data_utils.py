@@ -165,6 +165,94 @@ def prepare_dataset(
     return DataLoader(dataloader, **params)
 
 
+def grid_pairs(
+    bounds: List[int], resolution: List[int], dtype: Optional[str] = "float"
+) -> List:
+    """get grid pairs of patches in a larger array
+
+    Args:
+        bounds (List[int]): min_x, max_x, min_y, max_y of the lager array
+        resolution (List[int]): size of patch [w,h]
+        dtype (Optional[str], optional): output data type ["float", "int"]. Defaults to "float".
+
+    Returns:
+        [List]: output grid pairs
+    """
+    min_x, max_x, min_y, max_y = bounds
+    if dtype == "float":
+        out_type = float
+    elif dtype == "int":
+        out_type = int
+    else:
+        raise NotImplementedError
+    # transform to origin
+    nx = np.round((max_x - min_x) / resolution[0]).astype(np.int) + 1
+    ny = np.round((max_y - min_y) / resolution[1]).astype(np.int) + 1
+    x = np.linspace(min_x, max_x, nx)
+    y = np.linspace(min_y, max_y, ny)
+    xv, yv = np.meshgrid(x, y)
+    grid_points = list(zip(xv.flatten(), yv.flatten()))
+    skips = int((max_x - min_x) / resolution[0]) + 2
+    count = 0
+    pairs_coords = []
+    for i, point in enumerate(grid_points[:-skips]):
+        if point[0] == max_x:
+            continue
+        count += 1
+        pairs_coords.append(
+            list(
+                map(
+                    out_type,
+                    [
+                        point[0],
+                        point[1],
+                        grid_points[i + skips][0],
+                        grid_points[i + skips][1],
+                    ],
+                )
+            )
+        )
+    return pairs_coords
+
+
+def get_patch_boundaries(
+    image_size: List[int],
+    patch_size: List[int] = [256, 256],
+    grids_dim: List[int] = None,
+) -> List:
+    """generate a list of image boundaries within a given image size
+
+    Args:
+        image_size (List[int]): image size
+        patch_size (List[int]): patch size
+
+    Returns:
+        List: grid pairs, representing boundaris of smaller patches
+    """
+    assert len(image_size) == 2, "Len of image_size != 2."
+
+    if grids_dim is not None:
+        nx, ny = grids_dim
+        patch_size = [x // y for (x, y) in zip(image_size, grids_dim)]
+    else:
+        nx, ny = [x // y for (x, y) in zip(image_size, patch_size)]
+
+    limitx, limity = patch_size[0] * nx, patch_size[1] * ny
+    boundaries = grid_pairs([0, limitx, 0, limity], patch_size, dtype="int")
+
+    # TODO: Treat uncovered area.
+    # In an implementation using on the patch size, 
+    # the whole image is possibly not covered,
+    # we can add extra code to cover left out areas, which may result in overlap
+    return boundaries
+
+
 if __name__ == "__main__":
-    images = np.full([3, 3, 128, 256], 0, np.uint8)
-    mosaic = plot_images_mosaic(images)
+    # images = np.full([3, 3, 128, 256], 0, np.uint8)
+    # mosaic = plot_images_mosaic(images)
+    result = get_patch_boundaries([4, 4], [1, 1])
+    print(result)
+    result = get_patch_boundaries([4, 4], grids_dim=[4, 4])
+    print(result)
+
+    pass
