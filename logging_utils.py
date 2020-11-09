@@ -93,7 +93,9 @@ def tensorboard_image(
 
 
 # TODO: allow arbitrary number of images by taking input as a dict({name:image})
-def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -> None:
+def tensorboard_images(
+    writer: SummaryWriter, images: Dict, global_step: int, normalize_flags=None
+) -> None:
     """Output image tensors in tensorboard visualization. 
     Useful for image based training
 
@@ -102,8 +104,12 @@ def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -
         images (Dict): dictionary of {name: image_tensor} pair
         global_step (int): global step number
     """
-    for name, image in images.items():
-        grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
+    for i, (name, image) in enumerate(images.items()):
+        if normalize_flags is None:
+            normalize = True
+        else:
+            normalize = normalize_flags[i]
+        grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=normalize)
         writer.add_image(name, grid_image, global_step)
 
 
