@@ -43,7 +43,7 @@ def ssim(x, y, win_size=3, aggregate=True):
         return SSIM
 
 
-def dssim(x, y, win_size=3, aggregate=True):
+def dssim(x, y, win_size=11, aggregate=True):
     """
     SSIM Loss
     # TODO: add full docstrings
