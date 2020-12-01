@@ -69,7 +69,7 @@ def tensorboard_image(
     output: torch.tensor,
     global_step: int,
 ) -> None:
-    """Output image tensors in tensorboard visualization. 
+    """Output image tensors in tensorboard visualization.
     Useful for image based training
 
     Args:
@@ -94,7 +94,7 @@ def tensorboard_image(
 
 # TODO: allow arbitrary number of images by taking input as a dict({name:image})
 def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -> None:
-    """Output image tensors in tensorboard visualization. 
+    """Output image tensors in tensorboard visualization.
     Useful for image based training
 
     Args:
