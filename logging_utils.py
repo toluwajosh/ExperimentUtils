@@ -61,40 +61,10 @@ def setup_dirs(root_dir: Path, subdirectories: List[str]) -> None:
         new_dir.mkdir(parents=True, exist_ok=True)
 
 
-# TODO: remove in update
-def tensorboard_image(
-    writer: SummaryWriter,
-    image: torch.tensor,
-    target: torch.tensor,
-    output: torch.tensor,
-    global_step: int,
+def tensorboard_images(
+    writer: SummaryWriter, images: Dict, global_step: int, normalize_flags=None
 ) -> None:
-    """Output image tensors in tensorboard visualization.
-    Useful for image based training
-
-    Args:
-        writer (SummaryWriter): tensorboard writer object
-        image (torch.tensor): image tensor
-        target (torch.tensor): target image tensor
-        output (torch.tensor): prediction image tensor
-        global_step (int): global step number
-    """
-    # input image
-    grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
-    writer.add_image("Input image", grid_image, global_step)
-
-    # Model output
-    grid_image = make_grid(output[:2].clone().cpu().data, 3, normalize=True)
-    writer.add_image("Prediction", grid_image, global_step)
-
-    # target image
-    grid_image = make_grid(target[:2].clone().cpu().data, 3, normalize=True)
-    writer.add_image("Target", grid_image, global_step)
-
-
-# TODO: allow arbitrary number of images by taking input as a dict({name:image})
-def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -> None:
-    """Output image tensors in tensorboard visualization.
+    """Output image tensors in tensorboard visualization. 
     Useful for image based training
 
     Args:
@@ -102,8 +72,12 @@ def tensorboard_images(writer: SummaryWriter, images: Dict, global_step: int,) -
         images (Dict): dictionary of {name: image_tensor} pair
         global_step (int): global step number
     """
-    for name, image in images.items():
-        grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
+    for i, (name, image) in enumerate(images.items()):
+        if normalize_flags is None:
+            normalize = True
+        else:
+            normalize = normalize_flags[i]
+        grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=normalize)
         writer.add_image(name, grid_image, global_step)
 
 
