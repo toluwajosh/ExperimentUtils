@@ -6,7 +6,7 @@ import math
 import pickle
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Tuple, Optional, Union
 
 import cv2
 import numpy as np
@@ -267,6 +267,40 @@ def get_patches_batch(
         patch_tensor = image[:, :, x1:x2, y1:y2]
         patches_list.append(patch_tensor)
     return torch.cat(patches_list)
+
+
+def per_class_split(
+    data: List, labels: List, label_names: List, split: float
+) -> Tuple[List]:
+    """Split a set of data and labels by the size of each category
+
+    Args:
+        data (List): List of data samples
+        labels (List): List of data labels
+        label_names (List): Names given to each category
+        split (float): the split size
+
+    Returns:
+        Tuple: The splitted data
+    """
+    assert isinstance(split, float), "Split argument should be a float type"
+
+    samples_dict = {cat: [] for cat in label_names}
+    labels_dict = {cat: [] for cat in label_names}
+    for sample, label in zip(data, labels):
+        samples_dict[label].append(sample)
+        labels_dict[label].append(label)
+    a_data_split = []
+    a_labels_split = []
+    b_data_split = []
+    b_labels_split = []
+    for label in label_names:
+        cur_split = int(split * len(samples_dict[label]))
+        a_data_split += samples_dict[label][:cur_split]
+        a_labels_split += labels_dict[label][:cur_split]
+        b_data_split += samples_dict[label][cur_split:]
+        b_labels_split += labels_dict[label][cur_split:]
+    return (a_data_split, a_labels_split), (b_data_split, b_labels_split)
 
 
 if __name__ == "__main__":
