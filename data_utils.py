@@ -96,8 +96,8 @@ def plot_images_mosaic(
     Returns:
         [np.ndarray]: mosaic image
     """
-    tl = 3  # line thickness
-    tf = max(tl - 1, 1)  # font thickness
+    # tl = 3  # line thickness
+    # tf = max(tl - 1, 1)  # font thickness
 
     if isinstance(images, torch.Tensor):
         images = images.cpu().float().numpy()
@@ -106,7 +106,7 @@ def plot_images_mosaic(
     if np.max(images[0]) <= 1:
         images *= 255
 
-    bs, _, h, w = images.shape  # batch size, _, height, width
+    bs, c, h, w = images.shape  # batch size, _, height, width
 
     bs = min(bs, max_subplots)  # limit plot images
     ns = np.ceil(bs ** 0.5)  # number of subplots (square)
@@ -118,8 +118,10 @@ def plot_images_mosaic(
         w = math.ceil(scale_factor * w)
 
     # Empty array for output
-    mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
-
+    if c == 3:
+        mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
+    else:
+        mosaic = np.full((int(ns * h), int(ns * w)), 255, dtype=np.uint8)
     for i, img in enumerate(images):
         if i == max_subplots:  # if last batch has fewer images than we expect
             break
@@ -127,15 +129,20 @@ def plot_images_mosaic(
         block_x = int(w * (i // ns))
         block_y = int(h * (i % ns))
 
-        img = img.transpose(1, 2, 0)
-        if scale_factor < 1:
-            img = cv2.resize(img, (w, h))
+        if c == 3:
+            img = img.transpose(1, 2, 0)
+            if scale_factor < 1:
+                img = cv2.resize(img, (w, h))
 
-        mosaic[block_y : block_y + h, block_x : block_x + w, :] = img
+            mosaic[block_y : block_y + h, block_x : block_x + w, :] = img
+        else:
+            if scale_factor < 1:
+                img = cv2.resize(img, (w, h))
+            mosaic[block_y : block_y + h, block_x : block_x + w] = img
     if fname is not None:
-        mosaic = cv2.resize(
-            mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA
-        )
+        # mosaic = cv2.resize(
+        #     mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA
+        # )
         cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
     return mosaic
 
@@ -266,6 +273,7 @@ def get_patches_batch(
         x1, y1, x2, y2 = patch
         patch_tensor = image[:, :, x1:x2, y1:y2]
         patches_list.append(patch_tensor)
+        patch_tensor = None
     return torch.cat(patches_list)
 
 

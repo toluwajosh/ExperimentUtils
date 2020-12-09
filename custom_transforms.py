@@ -119,7 +119,7 @@ class RandomCropRect(object):
         return {"image": image, "targets": targets}
 
 
-# TODO: create better fix
+# TODO: remove in later date
 class DoNothing(object):
     """
     Do Nothing Class
