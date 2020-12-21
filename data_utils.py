@@ -82,7 +82,7 @@ def plot_image_single(
 def plot_images_mosaic(
     images: Union[np.ndarray, torch.Tensor],
     fname: Optional[str] = "images.jpg",
-    max_size: Optional[int] = 640,
+    max_size: Optional[int] = 1440,
     max_subplots: Optional[int] = 16,
 ):
     """Plot a batch of images as a mosaic stitched together.
@@ -110,13 +110,11 @@ def plot_images_mosaic(
 
     bs = min(bs, max_subplots)  # limit plot images
     ns = np.ceil(bs ** 0.5)  # number of subplots (square)
-
     # Check if we should resize
     scale_factor = max_size / max(h, w)
     if scale_factor < 1:
         h = math.ceil(scale_factor * h)
         w = math.ceil(scale_factor * w)
-
     # Empty array for output
     if c == 3:
         mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
