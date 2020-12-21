@@ -315,6 +315,4 @@ if __name__ == "__main__":
     image_shape = [1, 3, 2880, 2160]
     image = torch.ones(image_shape)
     patches_tensor = get_patches_batch(image)
-    print(patches_tensor.shape)
-
     pass
