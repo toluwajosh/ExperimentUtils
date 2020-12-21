@@ -43,10 +43,19 @@ def ssim(x, y, win_size=3, aggregate=True):
         return SSIM
 
 
-def dssim(x, y, win_size=11, aggregate=True):
-    """
-    SSIM Loss
-    # TODO: add full docstrings
+def dssim(
+    x: torch.tensor, y: torch.tensor, win_size: int = 11, aggregate: bool = True
+) -> torch.tensor:
+    """Return the dissimilarity loss, as a tensor or single value
+
+    Args:
+        x (torch.tensor): input
+        y (torch.tensor): target
+        win_size (int, optional): ssim window sizee. Defaults to 11.
+        aggregate (bool, optional): Flag to return tensor or single value. Defaults to True.
+
+    Returns:
+        torch.tensor: dssim value or tensor array
     """
     SSIM = ssim(x, y, win_size=win_size, aggregate=False)
     loss = torch.clamp((1 - SSIM) / 2, 0, 1)
