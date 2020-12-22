@@ -62,6 +62,7 @@ def shuffle_on_pattern(data_list: List, name: str = "shuffle_pattern") -> List:
     return rearrange(data_list, r_pattern)
 
 
+# TODO: move image plotting to report utils
 def plot_image_single(
     image: np.ndarray, size: Optional[int] = 15, title: Optional[str] = ""
 ) -> None:
@@ -72,6 +73,9 @@ def plot_image_single(
         size (Optional[int]): size of the plot image
         title (Optional[str]): optional title given to the plot
     """
+    print(
+        "deprecation warning! plot_image_single will be moved to report utils in the future."
+    )
     f = plt.figure(figsize=(size, size))
     image_plot = f.add_subplot()
     if title:
@@ -96,6 +100,9 @@ def plot_images_mosaic(
     Returns:
         [np.ndarray]: mosaic image
     """
+    print(
+        "deprecation warning! plot_image_mosaic will be moved to report utils in the future."
+    )
     # tl = 3  # line thickness
     # tf = max(tl - 1, 1)  # font thickness
 
