@@ -119,16 +119,6 @@ class RandomCropRect(object):
         return {"image": image, "targets": targets}
 
 
-# TODO: create better fix
-class DoNothing(object):
-    """
-    Do Nothing Class
-    """
-
-    def __call__(self, sample):
-        return sample
-
-
 class RandomHorizontalFlip(object):
     def __call__(self, sample):
         img = sample["image"]

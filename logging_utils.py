@@ -93,7 +93,6 @@ def tensorboard_image(
     writer.add_image("Target", grid_image, global_step)
 
 
-# TODO: allow arbitrary number of images by taking input as a dict({name:image})
 def tensorboard_images(
     writer: SummaryWriter, images: Dict, global_step: int, normalize_flags=None
 ) -> None:
