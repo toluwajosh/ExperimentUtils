@@ -308,7 +308,6 @@ def test_transforms():
     output_data = transform_compose_test(
         {"image": image, "targets": {"target_1": target, "target_2": target_2}}
     )
-    print(output_data)
 
 
 if __name__ == "__main__":
