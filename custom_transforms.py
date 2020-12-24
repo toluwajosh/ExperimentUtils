@@ -85,10 +85,7 @@ class Normalize(object):
         image -= self.mean
         image /= self.std
         targets = sample["targets"]
-        # return_dict = {"image": image}
         targets = {key: value for key, value in targets.items()}
-        # return_dict.update(targets)
-        # return return_dict
         return {"image": image, "targets": targets}
 
 
@@ -109,13 +106,11 @@ class RandomCropRect(object):
         x = random.randint(0, w - self.width)
         y = random.randint(0, h - self.height)
         image = image.crop((x, y, x + self.width, y + self.height))
-        # return_dict = {"image": image}
         targets = sample["targets"]
         targets = {
             key: tensor.crop((x, y, x + self.width, y + self.height))
             for key, tensor in targets.items()
         }
-        # return_dict.update(targets)
         return {"image": image, "targets": targets}
 
 
@@ -254,7 +249,6 @@ class Rescale(object):
         if "label" in sample:
             mask = sample["label"]
             mask = mask.resize(shape, Image.NEAREST)
-            # return {"image": img, "label": mask, "name": sample["name"]}
             return_dict.update({"label": mask})
         if "lanes" in sample:
             lanes = sample["lanes"]
