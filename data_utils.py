@@ -79,6 +79,25 @@ def plot_image_single(
     plt.imshow(image)
 
 
+def plot_imgs_in_dir(directory: Path, pattern: Optional[str] = None) -> None:
+    """Plot images in a directory, with optional pattern.
+
+    Args:
+        directory (Path/str): directory to plot from
+        pattern (str, optional): Pattern to search. Defaults to None.
+    """
+    if pattern is None:
+        image_list = [
+            f
+            for f in Path(directory).iterdir()
+            if (f.suffix == ".jpg" or f.suffix == ".png")
+        ]
+    else:
+        image_list = [f for f in Path(directory).iterdir() if pattern in str(f)]
+    for image in image_list:
+        plot_image_single(plt.imread(image))
+
+
 def plot_images_mosaic(
     images: Union[np.ndarray, torch.Tensor],
     fname: Optional[str] = "images.jpg",
