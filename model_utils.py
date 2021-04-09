@@ -21,6 +21,7 @@ def load_checkpoint(
         save_path_name = str(save_path)
         checkpoint = torch.load(save_path_name)
         model.load_state_dict(checkpoint["state_dict"])
+        # model.load_state_dict(checkpoint)
         logger.info(f"Loaded checkpoint: {save_path_name}")
     else:
         if exit_on_fail:
@@ -31,7 +32,7 @@ def load_checkpoint(
     return checkpoint
 
 
-def save_checkpoint(state: Dict, experiment_name: str, is_best: bool) -> None:
+def save_checkpoint(state: Dict, directory: str, is_best: bool) -> None:
     """Save checkpoint if a new best is achieved
 
     Args:
@@ -39,7 +40,9 @@ def save_checkpoint(state: Dict, experiment_name: str, is_best: bool) -> None:
         filename (Union[str, Path]): filename to save
         is_best (bool): flag for best model yet
     """
-    filename = Path(f"./results/{experiment_name}/checkpoints/train.ckpt")
+    directory = directory + "/checkpoints"
+    Path(directory).mkdir(exist_ok=True)
+    filename = Path(f"{directory}/train.ckpt")
     if is_best:
         logger.info("=> Saving new checkpoint")
         torch.save(state, filename)
