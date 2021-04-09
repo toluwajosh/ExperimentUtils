@@ -29,7 +29,8 @@ def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") ->
     ch = logging.StreamHandler()
     ch.setLevel(log_level)
     logging_format = logging.Formatter(
-        "%(asctime)s %(levelname)s [%(name)s] %(message)s", datefmt="%H:%M:%S",
+        "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        datefmt="%Y-%m-%d, %H:%M:%S",
     )
     ch.setFormatter(logging_format)
     logger.addHandler(ch)
@@ -59,6 +60,37 @@ def setup_dirs(root_dir: Path, subdirectories: List[str]) -> None:
     for subdirectory in subdirectories:
         new_dir = Path(root_dir) / Path(subdirectory)
         new_dir.mkdir(parents=True, exist_ok=True)
+
+
+# TODO: remove in update
+def tensorboard_image(
+    writer: SummaryWriter,
+    image: torch.tensor,
+    target: torch.tensor,
+    output: torch.tensor,
+    global_step: int,
+) -> None:
+    """Output image tensors in tensorboard visualization. 
+    Useful for image based training
+
+    Args:
+        writer (SummaryWriter): tensorboard writer object
+        image (torch.tensor): image tensor
+        target (torch.tensor): target image tensor
+        output (torch.tensor): prediction image tensor
+        global_step (int): global step number
+    """
+    # input image
+    grid_image = make_grid(image[:2].clone().cpu().data, 3, normalize=True)
+    writer.add_image("Input image", grid_image, global_step)
+
+    # Model output
+    grid_image = make_grid(output[:2].clone().cpu().data, 3, normalize=True)
+    writer.add_image("Prediction", grid_image, global_step)
+
+    # target image
+    grid_image = make_grid(target[:2].clone().cpu().data, 3, normalize=True)
+    writer.add_image("Target", grid_image, global_step)
 
 
 def tensorboard_images(

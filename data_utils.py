@@ -6,7 +6,7 @@ import math
 import pickle
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Tuple, Optional, Union
 
 import cv2
 import numpy as np
@@ -62,6 +62,7 @@ def shuffle_on_pattern(data_list: List, name: str = "shuffle_pattern") -> List:
     return rearrange(data_list, r_pattern)
 
 
+# TODO: move image plotting to report utils
 def plot_image_single(
     image: np.ndarray, size: Optional[int] = 15, title: Optional[str] = ""
 ) -> None:
@@ -72,6 +73,9 @@ def plot_image_single(
         size (Optional[int]): size of the plot image
         title (Optional[str]): optional title given to the plot
     """
+    print(
+        "deprecation warning! plot_image_single will be moved to report utils in the future."
+    )
     f = plt.figure(figsize=(size, size))
     image_plot = f.add_subplot()
     if title:
@@ -82,7 +86,7 @@ def plot_image_single(
 def plot_images_mosaic(
     images: Union[np.ndarray, torch.Tensor],
     fname: Optional[str] = "images.jpg",
-    max_size: Optional[int] = 640,
+    max_size: Optional[int] = 1440,
     max_subplots: Optional[int] = 16,
 ):
     """Plot a batch of images as a mosaic stitched together.
@@ -96,8 +100,11 @@ def plot_images_mosaic(
     Returns:
         [np.ndarray]: mosaic image
     """
-    tl = 3  # line thickness
-    tf = max(tl - 1, 1)  # font thickness
+    print(
+        "deprecation warning! plot_image_mosaic will be moved to report utils in the future."
+    )
+    # tl = 3  # line thickness
+    # tf = max(tl - 1, 1)  # font thickness
 
     if isinstance(images, torch.Tensor):
         images = images.cpu().float().numpy()
@@ -106,20 +113,20 @@ def plot_images_mosaic(
     if np.max(images[0]) <= 1:
         images *= 255
 
-    bs, _, h, w = images.shape  # batch size, _, height, width
+    bs, c, h, w = images.shape  # batch size, _, height, width
 
     bs = min(bs, max_subplots)  # limit plot images
     ns = np.ceil(bs ** 0.5)  # number of subplots (square)
-
     # Check if we should resize
     scale_factor = max_size / max(h, w)
     if scale_factor < 1:
         h = math.ceil(scale_factor * h)
         w = math.ceil(scale_factor * w)
-
     # Empty array for output
-    mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
-
+    if c == 3:
+        mosaic = np.full((int(ns * h), int(ns * w), 3), 255, dtype=np.uint8)
+    else:
+        mosaic = np.full((int(ns * h), int(ns * w)), 255, dtype=np.uint8)
     for i, img in enumerate(images):
         if i == max_subplots:  # if last batch has fewer images than we expect
             break
@@ -127,15 +134,20 @@ def plot_images_mosaic(
         block_x = int(w * (i // ns))
         block_y = int(h * (i % ns))
 
-        img = img.transpose(1, 2, 0)
-        if scale_factor < 1:
-            img = cv2.resize(img, (w, h))
+        if c == 3:
+            img = img.transpose(1, 2, 0)
+            if scale_factor < 1:
+                img = cv2.resize(img, (w, h))
 
-        mosaic[block_y : block_y + h, block_x : block_x + w, :] = img
+            mosaic[block_y : block_y + h, block_x : block_x + w, :] = img
+        else:
+            if scale_factor < 1:
+                img = cv2.resize(img, (w, h))
+            mosaic[block_y : block_y + h, block_x : block_x + w] = img
     if fname is not None:
-        mosaic = cv2.resize(
-            mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA
-        )
+        # mosaic = cv2.resize(
+        #     mosaic, (int(ns * w * 0.5), int(ns * h * 0.5)), interpolation=cv2.INTER_AREA
+        # )
         cv2.imwrite(fname, cv2.cvtColor(mosaic, cv2.COLOR_BGR2RGB))
     return mosaic
 
@@ -266,7 +278,42 @@ def get_patches_batch(
         x1, y1, x2, y2 = patch
         patch_tensor = image[:, :, x1:x2, y1:y2]
         patches_list.append(patch_tensor)
+        patch_tensor = None
     return torch.cat(patches_list)
+
+
+def per_class_split(
+    data: List, labels: List, label_names: List, split: float
+) -> Tuple[List]:
+    """Split a set of data and labels by the size of each category
+
+    Args:
+        data (List): List of data samples
+        labels (List): List of data labels
+        label_names (List): Names given to each category
+        split (float): the split size
+
+    Returns:
+        Tuple: The splitted data
+    """
+    assert isinstance(split, float), "Split argument should be a float type"
+
+    samples_dict = {cat: [] for cat in label_names}
+    labels_dict = {cat: [] for cat in label_names}
+    for sample, label in zip(data, labels):
+        samples_dict[label].append(sample)
+        labels_dict[label].append(label)
+    a_data_split = []
+    a_labels_split = []
+    b_data_split = []
+    b_labels_split = []
+    for label in label_names:
+        cur_split = int(split * len(samples_dict[label]))
+        a_data_split += samples_dict[label][:cur_split]
+        a_labels_split += labels_dict[label][:cur_split]
+        b_data_split += samples_dict[label][cur_split:]
+        b_labels_split += labels_dict[label][cur_split:]
+    return (a_data_split, a_labels_split), (b_data_split, b_labels_split)
 
 
 if __name__ == "__main__":
@@ -275,6 +322,4 @@ if __name__ == "__main__":
     image_shape = [1, 3, 2880, 2160]
     image = torch.ones(image_shape)
     patches_tensor = get_patches_batch(image)
-    print(patches_tensor.shape)
-
     pass
