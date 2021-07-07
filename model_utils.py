@@ -41,7 +41,7 @@ def save_checkpoint(state: Dict, directory: str, is_best: bool) -> None:
         is_best (bool): flag for best model yet
     """
     directory = directory + "/checkpoints"
-    Path(directory).mkdir(exist_ok=True)
+    Path(directory).mkdir(exist_ok=True, parents=True)
     filename = Path(f"{directory}/train.ckpt")
     if is_best:
         logger.info("=> Saving new checkpoint")

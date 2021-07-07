@@ -45,3 +45,9 @@ class ExpConfig:
         # Need a copy not to overwrite itself
         d = deepcopy(vars(self))
         return d
+
+    def __str__(self) -> str:
+        output = "Experiment Configuration:\n"
+        for k, v in vars(self).items():
+            output += f"\t{k}: {v}\n"
+        return output
