@@ -27,7 +27,7 @@ def load_checkpoint(
         if exit_on_fail:
             raise ValueError("No checkpoint found at '{}'".format(save_path))
         logger.warn("=> no checkpoint found at '{}'".format(save_path))
-        checkpoint = {"epoch": 1, "best": float("inf")}
+        checkpoint = {"epoch": 1, "best": -float("inf")}
 
     return checkpoint
 
