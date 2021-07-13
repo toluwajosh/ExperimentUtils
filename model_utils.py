@@ -7,7 +7,7 @@ logger = logging.getLogger(f"base.{__name__}")
 
 
 def load_checkpoint(
-    model: torch.nn.Module, save_path: Path, exit_on_fail: bool = False,
+    model: torch.nn.Module, save_path: Path, exit_on_fail: bool = False, mode="max"
 ) -> Dict:
     """Load model checkpoint from path,
         Also loads the model state dict
@@ -17,6 +17,12 @@ def load_checkpoint(
         save_path (str): path to the model checkpoint
         exit_on_fail (bool): Flag to exit program if loading failes.
     """
+    if mode == "min":
+        default_best = float("inf")
+    elif mode == "max":
+        default_best = -float("inf")
+    else:
+        raise ValueError(f"mode must be 'min' or 'max'")
     if save_path.is_file():
         save_path_name = str(save_path)
         checkpoint = torch.load(save_path_name)
@@ -27,7 +33,7 @@ def load_checkpoint(
         if exit_on_fail:
             raise ValueError("No checkpoint found at '{}'".format(save_path))
         logger.warn("=> no checkpoint found at '{}'".format(save_path))
-        checkpoint = {"epoch": 1, "best": -float("inf")}
+        checkpoint = {"epoch": 1, "best": default_best}
 
     return checkpoint
 
