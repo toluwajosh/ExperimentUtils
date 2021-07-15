@@ -44,7 +44,7 @@ def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") ->
     # Add colors
     _levels = [[226, "DEBUG"], [148, "INFO"], [208, "WARNING"], [197, "ERROR"]]
     for color, lvl in _levels:
-        _l = getattr(logging, lvl)
+        _l = getattr(logging, lvl)  # type: ignore
         logging.addLevelName(
             _l, "\x1b[38;5;{}m{:<7}\x1b[0m".format(color, logging.getLevelName(_l))
         )
@@ -65,9 +65,9 @@ def setup_dirs(root_dir: Path, subdirectories: List[str]) -> None:
 # TODO: remove in update
 def tensorboard_image(
     writer: SummaryWriter,
-    image: torch.tensor,
-    target: torch.tensor,
-    output: torch.tensor,
+    image: torch.Tensor,
+    target: torch.Tensor,
+    output: torch.Tensor,
     global_step: int,
 ) -> None:
     """Output image tensors in tensorboard visualization. 

@@ -27,7 +27,7 @@ class ExpConfig:
         """
         with Path(path).open("r") as f:
             d = yaml.safe_load(f)
-        return cls(**d)
+        return cls(**d)  # type: ignore
 
     def to_yaml(self, path: Union[Path, str]) -> None:
         """Save a configuration to disk as yaml
