@@ -4,6 +4,8 @@ Author: Joshua Owoyemi
 Date: 2020-09-7
 """
 
+import datetime
+import time
 import logging
 from pathlib import Path
 from typing import List, Dict
@@ -60,6 +62,16 @@ def setup_dirs(root_dir: Path, subdirectories: List[str]) -> None:
     for subdirectory in subdirectories:
         new_dir = Path(root_dir) / Path(subdirectory)
         new_dir.mkdir(parents=True, exist_ok=True)
+
+
+def get_timestamp() -> str:
+    """Get human readable timestamp
+    Returns:
+        str: timestamp of the form %Y_%m_%d_%H_%M_%S
+    """
+    timestamp = time.time()
+    value = datetime.datetime.fromtimestamp(timestamp)
+    return f"{value:%Y_%m_%d_%H_%M_%S}"
 
 
 # TODO: remove in update

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Type, TypeVar, Union
 
 import yaml
+from pydantic import BaseModel, validator
 
 # Allow to type hint to return the class itself
 # Note, you can skip that if you're from the future (see PEP 563), or
@@ -10,7 +11,7 @@ import yaml
 T = TypeVar("T", bound="ExpConfig")
 
 
-class ExpConfig:
+class ExpConfig(BaseModel):
     """Base class for experiment configurations. To hold variables for experiments
     """
 

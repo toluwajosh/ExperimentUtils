@@ -1,13 +1,17 @@
 import torch
 import logging
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Optional, Callable
 
 logger = logging.getLogger(f"base.{__name__}")
 
 
 def load_checkpoint(
-    model: torch.nn.Module, save_path: Path, exit_on_fail: bool = False, mode="max"
+    model: torch.nn.Module,
+    save_path: Path,
+    exit_on_fail: bool = False,
+    mode="max",
+    mod_state_dict_func: Optional[Callable] = None,
 ) -> Dict:
     """Load model checkpoint from path,
         Also loads the model state dict
@@ -26,6 +30,8 @@ def load_checkpoint(
     if save_path.is_file():
         save_path_name = str(save_path)
         checkpoint = torch.load(save_path_name)
+        if mod_state_dict_func is not None:
+            checkpoint["state_dict"] = mod_state_dict_func(checkpoint["state_dict"])
         model.load_state_dict(checkpoint["state_dict"])
         # model.load_state_dict(checkpoint)
         logger.info(f"Loaded checkpoint: {save_path_name}")
@@ -57,7 +63,7 @@ def save_checkpoint(state: Dict, directory: str, is_best: bool) -> None:
         torch.save(state, str(filename) + ".best")
     else:
         torch.save(state, filename)
-        logger.info("=> Validation Accuracy did not improve")
+        logger.info("=> Validation score did not improve")
 
 
 if __name__ == "__main__":
