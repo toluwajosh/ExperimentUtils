@@ -11,7 +11,7 @@ from pydantic import BaseModel, validator
 T = TypeVar("T", bound="ExpConfig")
 
 
-class ExpConfig(BaseModel):
+class BaseConfigModel(BaseModel):
     """Base class for experiment configurations. To hold variables for experiments
     """
 
