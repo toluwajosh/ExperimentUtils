@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Type, TypeVar, Union
@@ -52,3 +53,22 @@ class BaseConfigModel(BaseModel):
         for k, v in vars(self).items():
             output += f"\t{k}: {v}\n"
         return output
+
+
+class CLOptions:
+    """
+    Get command line options, based on the argparse library.
+    A default option is the configuration file path (.config_path)
+    Get the config by simply:
+    config_path = CLOptions().parse().config_path
+    """
+
+    def __init__(self):
+        self.parser = ArgumentParser()
+        self.parser.add_argument("config_path")
+
+    def add_argument(self, *args, **kwargs):
+        self.parser.add_argument(*args, **kwargs)
+
+    def parse(self) -> dict:
+        return self.parser.parse_args()
