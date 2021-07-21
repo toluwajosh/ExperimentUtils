@@ -1,5 +1,5 @@
-# Training Utilities
+# Experiment Utilities
 
-General utilities for training a machine/deep learning models
+General utilities for experimenting with machine/deep learning models
 
 Feel free to use for your own projects. :)
