@@ -12,6 +12,7 @@ def load_checkpoint(
     exit_on_fail: bool = False,
     mode="max",
     mod_state_dict_func: Optional[Callable] = None,
+    loc: Optional[str] = None,
 ) -> Dict:
     """Load model checkpoint from path,
         Also loads the model state dict
@@ -29,7 +30,7 @@ def load_checkpoint(
         raise ValueError(f"mode must be 'min' or 'max'")
     if save_path.is_file():
         save_path_name = str(save_path)
-        checkpoint = torch.load(save_path_name)
+        checkpoint = torch.load(save_path_name, map_location=loc)
         if mod_state_dict_func is not None:
             checkpoint["state_dict"] = mod_state_dict_func(checkpoint["state_dict"])
         model.load_state_dict(checkpoint["state_dict"])
