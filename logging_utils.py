@@ -17,6 +17,66 @@ from torchvision.utils import make_grid
 logger = logging.getLogger(f"base.{__name__}")
 
 
+class ControlledLogging:
+    def __init__(
+        self, name: str, log_level: str, log_file: str = "", rank: int = 0
+    ) -> None:
+        self.name = name
+        self.rank = rank
+        self.logger = logging.getLogger(self.name)
+        self.setup(self.logger, log_level, log_file=log_file)
+
+    @staticmethod
+    def setup(logger: logging.Logger, log_level: str, log_file: str = "") -> None:
+        """Setup logging for console output
+
+        Args:
+            logger (logging.Logger): the logger object
+            log_level (str): the minimum level of logging
+            log_file (optional, str): file to write logging output. Defaults to ""
+        """
+
+        # Setup console handler
+        logger.setLevel(log_level)
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+        logging_format = logging.Formatter(
+            "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+            datefmt="%Y-%m-%d, %H:%M:%S",
+        )
+        ch.setFormatter(logging_format)
+        logger.addHandler(ch)
+        if log_file:
+            Path(log_file).parent.mkdir(exist_ok=True, parents=True)
+            fh = logging.FileHandler(log_file)
+            fh.setLevel(log_level)
+            fh.setFormatter(logging_format)
+            logger.addHandler(fh)
+
+        # Add colors
+        _levels = [[226, "DEBUG"], [148, "INFO"], [208, "WARNING"], [197, "ERROR"]]
+        for color, lvl in _levels:
+            _l = getattr(logging, lvl)  # type: ignore
+            logging.addLevelName(
+                _l, "\x1b[38;5;{}m{:<7}\x1b[0m".format(color, logging.getLevelName(_l))
+            )
+
+    def debug(self, message: str) -> None:
+        if self.rank == 0:
+            self.logger.debug(message)
+
+    def info(self, message: str) -> None:
+        if self.rank == 0:
+            self.logger.info(message)
+
+    def warning(self, message: str) -> None:
+        self.logger.warning(message)
+
+    def error(self, message: str) -> None:
+        self.logger.error(message)
+
+
+# TODO: Deprecate
 def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") -> None:
     """Setup logging for console output
 
@@ -25,6 +85,10 @@ def setup_logging(logger: logging.Logger, log_level: str, log_file: str = "") ->
         log_level (str): the minimum level of logging
         log_file (optional, str): file to write logging output. Defaults to ""
     """
+
+    logger.warning(
+        "This function will be deprecated. Use ControlLogging.setup instead!"
+    )
 
     # Setup console handler
     logger.setLevel(log_level)
