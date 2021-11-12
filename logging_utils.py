@@ -19,7 +19,7 @@ logger = logging.getLogger(f"base.{__name__}")
 
 class ControlledLogging:
     def __init__(
-        self, name: str, log_level: str, log_file: str = "", rank: int = 0
+        self, name: str, log_level: str = "DEBUG", log_file: str = "", rank: int = 0
     ) -> None:
         self.name = name
         self.rank = rank
