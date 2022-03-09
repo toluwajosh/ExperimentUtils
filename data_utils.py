@@ -23,7 +23,7 @@ def rearrange(original: List, indices: List) -> List:
     """rearrange a list according to given index
 
     Args:
-        original (List): original list 
+        original (List): original list
         indices (List): indices for arrangement
 
     Returns:
@@ -35,7 +35,6 @@ def rearrange(original: List, indices: List) -> List:
     return res
 
 
-# TODO: #1 Conisder storing patterns in an os-specific-persistent temporary directory
 def shuffle_on_pattern(data_list: List, name: str = "shuffle_pattern") -> List:
     """shuffle a datalist based on a particular pattern
 

@@ -7,7 +7,9 @@ logger = logging.getLogger(f"base.{__name__}")
 
 
 def load_checkpoint(
-    model: torch.nn.Module, save_path: Path, exit_on_fail: bool = False,
+    model: torch.nn.Module,
+    save_path: Path,
+    exit_on_fail: bool = False,
 ) -> Dict:
     """Load model checkpoint from path,
         Also loads the model state dict
@@ -39,7 +41,7 @@ def save_checkpoint(state: Dict, experiment_name: str, is_best: bool) -> None:
         filename (Union[str, Path]): filename to save
         is_best (bool): flag for best model yet
     """
-    filename = Path(f"./results/{experiment_name}/checkpoints/train.ckpt")
+    filename = Path(f"{experiment_name}/checkpoints/train.ckpt")
     if is_best:
         logger.info("=> Saving new checkpoint")
         torch.save(state, filename)
